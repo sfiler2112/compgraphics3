@@ -1,0 +1,308 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Computer Graphics Project 3</title>
+        <style>
+        </style>
+        <script src="three.min.js"></script>
+        <script>
+            "use strict";
+            
+            var scene, camera, renderer;
+            var canvas;
+            var model;
+            
+            var animatingCounterclockwiseFishSchool = false;
+            var animatingClockwiseFishSchool = false;
+            
+            function createScene() {
+                renderer.setClearColor(0x87ceeb) // Set background color to sky blue
+                scene = new THREE.Scene();
+                
+                camera = new THREE.PerspectiveCamera(45, canvas.width/canvas.height, 1, 30);
+                camera.translateZ(10);
+                camera.translateY(6);
+                camera.rotateX(-Math.PI/8);
+                
+                
+                scene.add( new THREE.DirectionalLight(0x87ceeb , 1 ) );
+                var viewpointLight = new THREE.DirectionalLight( 0x87ceeb, 0.8 );  // a light to shine in the direction the camera faces
+                viewpointLight.position.set(0,0,1);  // shines down the z-axis
+                scene.add(viewpointLight);
+                
+                model = new THREE.Object3D();
+//                model.add( new THREE.Mesh(  // add a big cube at the origin; the cube is not animated
+//                    new THREE.BoxGeometry(3,3,3),
+//                    new THREE.MeshLambertMaterial({ color: 0xff7700 })
+//                ));
+                
+                
+                
+                var seaFloor = buildSeaFloor();
+                model.add(seaFloor);
+                
+                var counterclockwiseFishSchool = buildCounterclockwiseFishSchool();
+                model.add(counterclockwiseFishSchool);
+                
+                var clockwiseFishSchool = buildClockwiseFishSchool();
+                model.add(clockwiseFishSchool);
+               model.rotateY(Math.PI/4);
+
+                scene.add(model);
+            }
+            
+            /*
+            * Build a school of fish that swim in a counterclockwise circle. Translate each fish on the Z axis by an odd number.
+            */
+            function buildCounterclockwiseFishSchool(){
+                
+                var fishSchool = new THREE.Object3D();
+                var fish1, fish2, fish3, fish4;
+                
+                fish1 = buildFish();
+                fish1.scale.set(.1,.1,.1);
+                
+                fish2 = fish1.clone();
+                fish3 = fish1.clone();
+                fish4 = fish1.clone();
+                
+                fish1.translateY(1);
+                fish1.translateZ(1);
+                
+                fish2.translateY(1.5);
+                fish2.translateZ(3);
+                fish2.translateX(-1);
+                
+                fish3.translateY(1.25);
+                fish3.translateZ(1);
+                fish3.translateX(3);
+                
+                fish4.translateY(1.5);
+                fish4.translateZ(5);
+                
+                fishSchool.add(fish1);
+                fishSchool.add(fish2);
+                fishSchool.add(fish3);
+                fishSchool.add(fish4);
+    
+                return fishSchool;
+            }
+            
+            /*
+            * Build a school of fish that swim in a clockwise circle. Translate each fish on the Z axis by an even number.
+            */
+            function buildClockwiseFishSchool(){
+                
+                var fishSchool = new THREE.Object3D();
+                var fish1, fish2, fish3, fish4;
+                
+                fish1 = buildFish();
+                fish1.scale.set(.2,.2,.2);
+                fish1.rotateY(Math.PI);
+                
+                fish2 = fish1.clone();
+                fish3 = fish1.clone();
+                fish4 = fish1.clone();
+                
+                fish1.translateY(1);
+                fish1.translateZ(-2);
+                
+                fish2.translateY(1.5);
+                fish2.translateZ(-4);
+                fish2.translateX(-1);
+                
+                fish3.translateY(1.25);
+                fish3.translateZ(-2);
+                fish3.translateX(3);
+                
+                fish4.translateY(1.5);
+                fish4.translateZ(-6);
+                
+                fishSchool.add(fish1);
+                fishSchool.add(fish2);
+                fishSchool.add(fish3);
+                fishSchool.add(fish4);
+    
+                return fishSchool;
+            }
+            
+            /*
+            * Build seaweed with extruded shapes to add to the sea floor.
+            */
+            function buildSeaweed(){
+                var seaweed = new THREE.Object3D();
+                
+                var seaweedShapePath = new THREE.Shape();
+                seaweedShapePath.moveTo(0,0);
+                seaweedShapePath.quadraticCurveTo(-1,3, 0,4);
+                seaweedShapePath.quadraticCurveTo(1,5, 0,8);
+                seaweedShapePath.quadraticCurveTo(-.5,11, .5, 12);
+                seaweedShapePath.quadraticCurveTo(0,11, 1,8);
+                seaweedShapePath.quadraticCurveTo(2,5, 1,4);
+                seaweedShapePath.quadraticCurveTo(0,3, 1,0);
+                seaweedShapePath.lineTo(0,0);
+                
+                var seaweedSegment = new THREE.Mesh(
+                    new THREE.ExtrudeGeometry(seaweedShapePath, {curveSegments: 30, amount: .25, bevelEnabled: true, bevelThickness: .25, bevelSize: .25}),
+                    new THREE.MeshLambertMaterial({color: 0x013220, shading: THREE.FlatShading})
+                );
+                
+                seaweedSegment.scale.set(.25,.4,.1);
+                
+                var seaweedSegment2 = seaweedSegment.clone();
+                var seaweedSegment3 = seaweedSegment.clone();
+                
+                seaweedSegment.scale.set(.25,.4,.1);
+                
+                seaweedSegment2.scale.set(.25,.37,.1);
+                seaweedSegment2.rotateZ(Math.PI/16);
+                
+                
+                seaweedSegment3.scale.set(.25,.37,.1);
+                seaweedSegment3.translateX(.25);
+                seaweedSegment3.rotateZ(-Math.PI/10);
+                seaweedSegment3.rotateY(Math.PI);
+                
+                
+                
+                seaweed.add(seaweedSegment);
+                seaweed.add(seaweedSegment2);
+                seaweed.add(seaweedSegment3);
+                
+                return seaweed;
+            }
+            
+            /*
+            * Build a rock from multiple dodecahedrons to add to the sea floor.
+            */
+            function buildRock(){
+                
+                var rock = new THREE.Object3D();
+                
+                var seaFloorRock = new THREE.Mesh(
+                    new THREE.DodecahedronGeometry(),
+                    new THREE.MeshLambertMaterial({color: 0xa9a9a9, shading: THREE.FlatShading})
+                );
+                var seaFloorRock2 = seaFloorRock.clone();
+                seaFloorRock.rotateY(1);
+                seaFloorRock.rotateX(1);
+                seaFloorRock2.translateX(.5);
+                seaFloorRock2.translateZ(-.5);
+                seaFloorRock2.translateY(.25);
+                
+                rock.add(seaFloorRock);
+                rock.add(seaFloorRock2);
+                
+                return rock;
+            }
+            
+            /*
+            * Build build the sea floor with rocks and seaweed on a sand-colored plane.
+            */
+            function buildSeaFloor() {
+                var seaFloor = new THREE.Object3D();
+                
+                var seaFloorPlane = new THREE.Mesh(
+                    new THREE.PlaneGeometry(50,50),
+                    new THREE.MeshLambertMaterial({color: 0xEDC9AF, shading: THREE.FlatShading})
+                );
+                seaFloorPlane.rotateX(-Math.PI/2);
+                seaFloor.add(seaFloorPlane);
+                
+                var seaFloorRock = buildRock();
+                var seaFloorRock2 = buildRock();
+                seaFloorRock.scale.set(2,1,1);
+                seaFloorRock2.translateX(-2);
+                seaFloorRock2.translateZ(-3);
+                seaFloorRock2.scale.set(1,2,1);
+                seaFloorRock2.rotateY(Math.PI);
+                seaFloor.add(seaFloorRock);
+                seaFloor.add(seaFloorRock2);
+                
+                var seaweed = buildSeaweed();
+                seaweed.translateX(-1);
+                seaweed.translateZ(-2);
+                seaFloor.add(seaweed);
+                
+                return seaFloor;
+            }
+            
+            /*
+            * Build a fish with a head, body, and tail.
+            */
+            function buildFish() {
+                var fishMaterial = new THREE.MeshPhongMaterial({color: 0xC0C0C0, shading: THREE.SmoothShading});
+                var fish = new THREE.Object3D();
+                
+                var fishHead = new THREE.Mesh(
+                    new THREE.CylinderGeometry(1,1,.25,15,1,false,0,Math.PI),
+                    fishMaterial
+                );
+                fishHead.rotateX(Math.PI/2);
+                fishHead.scale.set(2,1,1);
+                fish.add(fishHead);
+                
+                var fishBody = new THREE.Mesh(
+                    new THREE.BoxGeometry(3,2,.25),
+                    fishMaterial
+                );
+                fishBody.translateX(-1.5);
+                fish.add(fishBody);
+                
+                var fishTailShapePath = new THREE.Shape();
+                fishTailShapePath.moveTo(0,2);
+                fishTailShapePath.lineTo(0,0);
+                fishTailShapePath.quadraticCurveTo(-2,1.5,-3,0);
+                fishTailShapePath.lineTo(-3,2);
+                fishTailShapePath.quadraticCurveTo(-2,.5,0,2);
+                
+//                var fishTailShape = new THREE.Mesh(
+//                    new THREE.ShapeGeometry( fishTailShapePath, {curveSegments: 30}),
+//                    fishMaterial 
+//                );
+//                fishTailShape.translateX(-3);
+//                fishTailShape.translateY(-1);
+                
+                var fishTail = new THREE.Mesh(
+                    new THREE.ExtrudeGeometry(fishTailShapePath, {curveSegments: 30, amount: .25, bevelEnabled: false}),
+                    fishMaterial
+                );
+                fishTail.translateX(-3);
+                fishTail.translateY(-1);
+                fishTail.translateZ(-.125);
+                fish.add(fishTail);
+                
+                
+                return fish;
+            }
+            
+            function render() {
+                renderer.render(scene, camera);
+            }
+            
+            function init() {
+                
+                canvas = document.getElementById("scene-canvas");
+                renderer = new THREE.WebGLRenderer( {
+                    canvas: canvas,
+                    antialias: true
+                });
+//                try{
+//                    
+//                }
+//                catch (e) {
+//                    document.getElementById("canvas-holder").innerHTML = "Whoops! WebGL was not found.";
+//                    return;
+//                }
+                createScene();
+                render();
+            }
+        </script>
+    </head>
+    <body onload="init()">
+        <p><label><input type="checkbox" id="animate">Animate</label></p>
+        <div id="canvas-holder">
+            <canvas id="scene-canvas" width="640" height="640"></canvas>
+        </div>
+    </body>
+</html>
