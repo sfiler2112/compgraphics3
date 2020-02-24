@@ -12,43 +12,149 @@
             var canvas;
             var model;
             
+            var counterclockwiseFishSchool
             var animatingCounterclockwiseFishSchool = false;
+            
+            var clockwiseFishSchool
             var animatingClockwiseFishSchool = false;
+            
+            var topLight, viewpointLight; // Lights for the scene
+            var usingBlueLight = true;
+            
+            function setLights(){
+                if(usingBlueLight){
+                    topLight.color.setHex(0x87ceeb);
+                    viewpointLight.color.setHex(0x87ceeb);
+                } else {
+                    topLight.color.setHex(0xffffff);
+                    viewpointLight.color.setHex(0xffffff);
+                }
+                
+            }
             
             function createScene() {
                 renderer.setClearColor(0x87ceeb) // Set background color to sky blue
                 scene = new THREE.Scene();
                 
                 camera = new THREE.PerspectiveCamera(45, canvas.width/canvas.height, 1, 30);
-                camera.translateZ(10);
+                camera.translateZ(12);
                 camera.translateY(6);
                 camera.rotateX(-Math.PI/8);
                 
-                
-                scene.add( new THREE.DirectionalLight(0x87ceeb , 1 ) );
-                var viewpointLight = new THREE.DirectionalLight( 0x87ceeb, 0.8 );  // a light to shine in the direction the camera faces
+                topLight = new THREE.DirectionalLight(0x87ceeb , 1 );
+                viewpointLight = new THREE.DirectionalLight( 0x87ceeb, 0.8 );  // a light to shine in the direction the camera faces
                 viewpointLight.position.set(0,0,1);  // shines down the z-axis
+                scene.add(topLight);
                 scene.add(viewpointLight);
                 
                 model = new THREE.Object3D();
-//                model.add( new THREE.Mesh(  // add a big cube at the origin; the cube is not animated
-//                    new THREE.BoxGeometry(3,3,3),
-//                    new THREE.MeshLambertMaterial({ color: 0xff7700 })
-//                ));
                 
                 
                 
                 var seaFloor = buildSeaFloor();
                 model.add(seaFloor);
                 
-                var counterclockwiseFishSchool = buildCounterclockwiseFishSchool();
+                counterclockwiseFishSchool = buildCounterclockwiseFishSchool();
                 model.add(counterclockwiseFishSchool);
                 
-                var clockwiseFishSchool = buildClockwiseFishSchool();
+                clockwiseFishSchool = buildClockwiseFishSchool();
                 model.add(clockwiseFishSchool);
-               model.rotateY(Math.PI/4);
-
+//                model.rotateX(Math.PI/2);
                 scene.add(model);
+            }
+            
+            /*
+            * Build a starfish that will sit on a rock.
+            */
+            function buildStarfish(){
+                var starfish = new THREE.Object3D();
+                
+                var starfishLeg1 = new THREE.Object3D();
+                var starfishLeg2, starfishLeg3, starfishLeg4, starfishLeg5;
+                
+                var starfishLegCone = new THREE.Mesh(
+                    new THREE.CylinderGeometry(.1,.5,3),
+                    new THREE.MeshLambertMaterial({color: 0x420d09, shading: THREE.SmoothShading})
+                );
+                starfishLegCone.translateY(1);
+                starfishLeg1.add(starfishLegCone);
+                
+                starfishLeg2 = starfishLeg1.clone();
+                starfishLeg2.rotateZ(Math.PI/2.5);
+                
+                starfishLeg3 = starfishLeg2.clone();
+                starfishLeg3.rotateZ(Math.PI/2.5);
+                
+                starfishLeg4 = starfishLeg3.clone();
+                starfishLeg4.rotateZ(Math.PI/2.5);
+                
+                starfishLeg5 = starfishLeg4.clone();
+                starfishLeg5.rotateZ(Math.PI/2.5);
+                
+                starfish.add(starfishLeg1);
+                starfish.add(starfishLeg2);
+                starfish.add(starfishLeg3);
+                starfish.add(starfishLeg4);
+                starfish.add(starfishLeg5);
+                
+                
+                
+                return starfish;
+            }
+            
+            /*
+            * Build a clam that will sit on the seafloor.
+            */
+            function buildClam(){
+                var clam = new THREE.Object3D();
+                
+                var clamSection1, clamSection2, clamSection3, clamSection4, clamSection5;
+                clamSection1 = buildClamSection();
+                
+                clamSection2 = clamSection1.clone();
+                clamSection2.rotateZ(Math.PI/5.9);
+                
+                clamSection3 = clamSection2.clone();
+                clamSection3.rotateZ(Math.PI/5.9);
+                
+                clamSection4 = clamSection3.clone();
+                clamSection4.rotateZ(Math.PI/5.9);
+                
+                clamSection5 = clamSection4.clone();
+                clamSection5.rotateZ(Math.PI/5.9);
+                
+                clam.add(clamSection1);
+                clam.add(clamSection2);
+                clam.add(clamSection3);
+                clam.add(clamSection4);
+                clam.add(clamSection5);
+                
+                return clam;
+
+            }
+            
+            /*
+            * Build a section of the clam shell with a cylender and sphere.
+            */
+            function buildClamSection(){
+                var clamSection = new THREE.Object3D();
+                
+                var surface = new THREE.Mesh(
+                    new THREE.CylinderGeometry(1,.2,4,8,1,true,0,Math.PI),
+                    new THREE.MeshLambertMaterial({color: 0xffb6c1, shading: THREE.SmoothShading})
+                );
+                surface.rotateY(-Math.PI/2);
+                surface.translateY(1.5);
+                
+                var tip = new THREE.Mesh(
+                    new THREE.SphereGeometry(1,8,6,0,Math.PI,0,Math.PI/2),
+                    new THREE.MeshLambertMaterial({color: 0xffb6c1, shading: THREE.SmoothShading})
+                );
+                tip.translateY(3.5);
+                
+                clamSection.add(surface);
+                clamSection.add(tip);
+                return clamSection;
             }
             
             /*
@@ -58,8 +164,9 @@
                 
                 var fishSchool = new THREE.Object3D();
                 var fish1, fish2, fish3, fish4;
+                var fishRotateObject1, fishRotateObject2;  // Objects used to rotate the fish around the y-axis of the origin when positioning them within the school.
                 
-                fish1 = buildFish();
+                fish1 = buildFish(0xffd700);
                 fish1.scale.set(.1,.1,.1);
                 
                 fish2 = fish1.clone();
@@ -67,22 +174,26 @@
                 fish4 = fish1.clone();
                 
                 fish1.translateY(1);
-                fish1.translateZ(1);
+                fish1.translateZ(5);
                 
                 fish2.translateY(1.5);
-                fish2.translateZ(3);
-                fish2.translateX(-1);
+                fish2.translateZ(5);
+                fishRotateObject1 = new THREE.Object3D();
+                fishRotateObject1.add(fish2);
+                fishRotateObject1.rotateY(-Math.PI/10);
                 
                 fish3.translateY(1.25);
-                fish3.translateZ(1);
-                fish3.translateX(3);
+                fish3.translateZ(7);
+                fishRotateObject2 = new THREE.Object3D();
+                fishRotateObject2.add(fish3);
+                fishRotateObject2.rotateY(Math.PI/8);
                 
                 fish4.translateY(1.5);
-                fish4.translateZ(5);
+                fish4.translateZ(7);
                 
                 fishSchool.add(fish1);
-                fishSchool.add(fish2);
-                fishSchool.add(fish3);
+                fishSchool.add(fishRotateObject1);
+                fishSchool.add(fishRotateObject2);
                 fishSchool.add(fish4);
     
                 return fishSchool;
@@ -95,8 +206,9 @@
                 
                 var fishSchool = new THREE.Object3D();
                 var fish1, fish2, fish3, fish4;
+                var fishRotateObject1, fishRotateObject2;  // Objects used to rotate the fish around the y-axis of the origin when positioning them within the school.
                 
-                fish1 = buildFish();
+                fish1 = buildFish(0x6a0dad);
                 fish1.scale.set(.2,.2,.2);
                 fish1.rotateY(Math.PI);
                 
@@ -105,22 +217,26 @@
                 fish4 = fish1.clone();
                 
                 fish1.translateY(1);
-                fish1.translateZ(-2);
+                fish1.translateZ(-4);
                 
                 fish2.translateY(1.5);
                 fish2.translateZ(-4);
-                fish2.translateX(-1);
+                fishRotateObject1 = new THREE.Object3D();
+                fishRotateObject1.add(fish2);
+                fishRotateObject1.rotateY(-Math.PI/10);
                 
                 fish3.translateY(1.25);
-                fish3.translateZ(-2);
-                fish3.translateX(3);
+                fish3.translateZ(-6);
+                fishRotateObject2 = new THREE.Object3D();
+                fishRotateObject2.add(fish3);
+                fishRotateObject2.rotateY(Math.PI/6);
                 
                 fish4.translateY(1.5);
                 fish4.translateZ(-6);
                 
                 fishSchool.add(fish1);
-                fishSchool.add(fish2);
-                fishSchool.add(fish3);
+                fishSchool.add(fishRotateObject1);
+                fishSchool.add(fishRotateObject2);
                 fishSchool.add(fish4);
     
                 return fishSchool;
@@ -216,6 +332,7 @@
                 seaFloorRock2.translateZ(-3);
                 seaFloorRock2.scale.set(1,2,1);
                 seaFloorRock2.rotateY(Math.PI);
+                
                 seaFloor.add(seaFloorRock);
                 seaFloor.add(seaFloorRock2);
                 
@@ -224,14 +341,32 @@
                 seaweed.translateZ(-2);
                 seaFloor.add(seaweed);
                 
+                var starfish = buildStarfish();
+                
+                starfish.scale.set(.25,.25,.25);
+                
+                starfish.translateY(1);
+                starfish.translateX(1);
+                starfish.rotateZ(Math.PI/8);
+                starfish.rotateY(.2);
+                starfish.rotateX(-Math.PI/3.4);
+                seaFloor.add(starfish);
+                
+                
+                var clam = buildClam();
+                clam.scale.set(.2,.2,.2);
+                clam.translateX(-2.1);
+                clam.rotateX(-Math.PI/2);
+                seaFloor.add(clam);
+                
                 return seaFloor;
             }
             
             /*
             * Build a fish with a head, body, and tail.
             */
-            function buildFish() {
-                var fishMaterial = new THREE.MeshPhongMaterial({color: 0xC0C0C0, shading: THREE.SmoothShading});
+            function buildFish(fishColor) {
+                var fishMaterial = new THREE.MeshPhongMaterial({color: fishColor, shading: THREE.SmoothShading});
                 var fish = new THREE.Object3D();
                 
                 var fishHead = new THREE.Mesh(
@@ -276,8 +411,80 @@
                 return fish;
             }
             
+            function rotateCounterclockwiseFishSchool(){
+                counterclockwiseFishSchool.rotation.y += 0.02;
+            }
+            
+            function rotateClockwiseFishSchool(){
+                clockwiseFishSchool.rotation.y -= 0.04;
+            }
+            
             function render() {
                 renderer.render(scene, camera);
+            }
+            
+            function updateCounterClockwiseAnimation(){
+                if (animatingCounterclockwiseFishSchool) {
+                    rotateCounterclockwiseFishSchool();
+                    render();
+                    requestAnimationFrame(updateCounterClockwiseAnimation); 
+                }
+            }
+            
+            function updateClockwiseAnimation(){
+                if (animatingClockwiseFishSchool) {
+                    rotateClockwiseFishSchool();
+                    render();
+                    requestAnimationFrame(updateClockwiseAnimation); 
+                }
+            }
+            
+            function doFrame() {
+                if(animatingCounterclockwiseFishSchool){
+                   rotateCounterclockwiseFishSchool();
+                }
+
+                if(animatingClockwiseFishSchool){
+                   rotateClockwiseFishSchool();
+                }
+                
+                if (animatingCounterclockwiseFishSchool || animatingClockwiseFishSchool) {
+                    render();
+                    requestAnimationFrame(doFrame); 
+                }
+            }
+            
+            function doAnimateCWCheckbox() {
+                var animCW = document.getElementById("animate-cwfish").checked;
+                
+                if (animCW != animatingClockwiseFishSchool) {
+                    animatingClockwiseFishSchool = animCW;
+                    
+                    if (animatingClockwiseFishSchool) {
+                        updateClockwiseAnimation();
+                    }
+                }
+            }
+            
+            function doAnimateCounterCWCheckbox() {
+                var animCounterCW = document.getElementById("animate-countercwfish").checked;
+                
+                if (animCounterCW != animatingCounterclockwiseFishSchool) {
+                    animatingCounterclockwiseFishSchool = animCounterCW;
+                    
+                    if (animatingCounterclockwiseFishSchool) {
+                        updateCounterClockwiseAnimation();
+                    }
+                }
+            }
+            
+            function doLightCheckBox(){
+                var blueLight = document.getElementById("blue-light").checked;
+                if(blueLight != usingBlueLight){
+                    usingBlueLight = blueLight;
+                    setLights();
+                    render();
+                }
             }
             
             function init() {
@@ -294,15 +501,23 @@
 //                    document.getElementById("canvas-holder").innerHTML = "Whoops! WebGL was not found.";
 //                    return;
 //                }
+                document.getElementById("animate-countercwfish").checked = false;
+	            document.getElementById("animate-countercwfish").onchange = doAnimateCounterCWCheckbox;
+                document.getElementById("animate-cwfish").checked = false;
+	            document.getElementById("animate-cwfish").onchange = doAnimateCWCheckbox;
+                document.getElementById("blue-light").checked = true;
+                document.getElementById("blue-light").onchange = doLightCheckBox;
                 createScene();
                 render();
             }
         </script>
     </head>
     <body onload="init()">
-        <p><label><input type="checkbox" id="animate">Animate</label></p>
+        <p><label><input type="checkbox" id="animate-countercwfish">Animate Counterclockwise Fish School</label></p>
+        <p><label><input type="checkbox" id="animate-cwfish">Animate Clockwise Fish School</label></p>
+        <p><label><input type="checkbox" id="blue-light">Use Blue Lighting</label></p>
         <div id="canvas-holder">
-            <canvas id="scene-canvas" width="640" height="640"></canvas>
+            <canvas id="scene-canvas" width="640" height="480"></canvas>
         </div>
     </body>
 </html>
